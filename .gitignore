@@ -3,3 +3,7 @@
 ################################################################################
 
 /.vs
+/.NetCore/Watchdog/.vs/Watchdog/v15
+/.NetCore/Watchdog/Watchdog/bin/ARM/Debug
+/.NetCore/Watchdog/Watchdog/obj
+/.NetCore/Watchdog/Watchdog/Watchdog.csproj.user
