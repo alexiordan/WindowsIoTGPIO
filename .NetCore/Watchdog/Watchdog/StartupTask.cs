@@ -4,6 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Net.Http;
 using Windows.ApplicationModel.Background;
+using Windows.Devices.Gpio;
+using System.Threading;
+using System.Diagnostics;
 
 // The Background Application template is documented at http://go.microsoft.com/fwlink/?LinkID=533884&clcid=0x409
 
@@ -11,6 +14,10 @@ namespace Watchdog
 {
     public sealed class StartupTask : IBackgroundTask
     {
+        private const int PAT_INTERVAL_IN_MS = 10000;
+        private const int SIGNAL_DURATION_IN_MS = 500;
+        private const int WATCHDOG_PIN = 18;
+
         public void Run(IBackgroundTaskInstance taskInstance)
         {
             // 
@@ -21,13 +28,23 @@ namespace Watchdog
             // described in http://aka.ms/backgroundtaskdeferral
             //
 
-            //
-            // Create the deferral by requesting it from the task instance.
-            //
-            BackgroundTaskDeferral deferral = taskInstance.GetDeferral();
+            var watchdogPin = GpioController.GetDefault().OpenPin(WATCHDOG_PIN);
+            while (true)
+            {
+                watchdogPin.SetDriveMode(GpioPinDriveMode.Output);
+                Debug.WriteLine($"{DateTime.Now} PIN {watchdogPin.PinNumber} set as {watchdogPin.GetDriveMode()}");
 
-            var watchdogResetter = new WatchdogResetter();
-            watchdogResetter.Start();
+                watchdogPin.Write(GpioPinValue.Low);
+                Debug.WriteLine($"{DateTime.Now} PIN {watchdogPin.PinNumber} set LOW");
+                Thread.Sleep(SIGNAL_DURATION_IN_MS);
+
+                //m_WatchdogPetPin.Write(GpioPinValue.High);
+                //Debug.WriteLine($"{DateTime.Now} PIN {m_WatchdogPetPin.PinNumber} set HIGH");
+                watchdogPin.SetDriveMode(GpioPinDriveMode.Input);
+                Debug.WriteLine($"{DateTime.Now} PIN {watchdogPin.PinNumber} set {watchdogPin.GetDriveMode()} ");
+
+                Thread.Sleep(PAT_INTERVAL_IN_MS);
+            }
         }
     }
 }
